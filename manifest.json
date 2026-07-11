@@ -1,0 +1,19 @@
+{
+  "name": "مِقياس MIQYAS — قياس معرفي دقيق",
+  "short_name": "مِقياس",
+  "description": "اختبار ذكاء تكيّفي مبني على المنهج العلمي للقياس المعرفي — نتيجة صادقة ضمن نطاق ثقة.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A0E14",
+  "theme_color": "#0A0E14",
+  "categories": ["education", "productivity"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -1,5 +1,5 @@
-/* MIQYAS service worker — v1.6.0 */
-const V = "miqyas-v1.6.0";
+/* MIQYAS service worker — v1.7.1 */
+const V = "miqyas-v1.7.1";
 const CORE = [
   "./", "./index.html", "./manifest.json",
   "./icon-192.png", "./icon-512.png", "./icon-maskable.png",

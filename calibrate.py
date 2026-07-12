@@ -38,7 +38,11 @@ def pred_b(sig):
             b += 0.15
         return clamp(b, -2.4, 3.0)
     if dom == "num": return NB.get(rest, 0.0)
-    if dom == "spa": return clamp(-1.05 + 0.3 * ((int(rest) if rest.isdigit() else 6) - 5), -1.5, 2.25)
+    if dom == "spa":
+        if rest.startswith("f") and len(rest) >= 3:
+            K, P = int(rest[1]), int(rest[2])
+            return clamp(-1.35 + 0.9 * (K - 1) + 0.35 * (P - 1), -1.5, 1.6)
+        return clamp(-1.05 + 0.3 * ((int(rest) if rest.isdigit() else 6) - 5), -1.5, 2.25)
     if dom == "mem":
         if rest.startswith("b"):
             L = int(rest[1:]) if rest[1:].isdigit() else 4

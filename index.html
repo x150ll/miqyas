@@ -763,6 +763,7 @@ ar:{
   q_mem:"راقب تسلسل الخلايا المضيئة، ثم أعده بنفس الترتيب",
   q_memr:"راقب تسلسل الخلايا المضيئة، ثم أعده بالترتيب المعكوس — من الأخير إلى الأول",
   q_ana:"العلاقة نفسها: كما تحوّل الشكل الأول إلى الثاني، حوِّل الثالث",
+  q_fold:"طُوِيَت الورقة كما في الرسم ثم ثُقِبَت — كيف تبدو بعد فتحها بالكامل؟",
   mem_watch:"راقب بتركيز…", mem_recall:"الآن أعد الترتيب", mem_recall_r:"الآن أعده معكوسًا — ابدأ من الأخير", mem_reset:"مسح",
   practice_tag:"تدريب", p_ok:"صحيح — أحسنت.", p_no:"ليست الإجابة الصحيحة — الصحيح هو المُظلَّل بالأخضر.",
   t_timeout:"انتهى وقت السؤال",
@@ -841,6 +842,7 @@ en:{
   q_mem:"Watch the sequence of lit cells, then repeat it in the same order",
   q_memr:"Watch the sequence of lit cells, then repeat it in REVERSE order — last to first",
   q_ana:"Same relationship: as the first shape becomes the second, transform the third",
+  q_fold:"The paper is folded as shown, then punched — how does it look fully unfolded?",
   mem_watch:"Watch closely…", mem_recall:"Now repeat the order", mem_recall_r:"Now repeat it in reverse — start from the last", mem_reset:"Clear",
   practice_tag:"Practice", p_ok:"Correct — well done.", p_no:"Not quite — the correct one is highlighted in green.",
   t_timeout:"Time's up for this question",
@@ -1047,7 +1049,11 @@ function predB(sig){
               multadd:1.15,pow:1.4,altmult:1.65,cube:1.95};
     return (NB[rest]!==undefined?NB[rest]:0);
   }
-  if(dom==="spa"){const n=+rest||6;return clamp(-1.05+0.3*(n-5),-1.5,2.25);}
+  if(dom==="spa"){
+    if(rest[0]==="f"){const K=+rest[1]||1,P=+rest[2]||1;
+      return clamp(-1.35+0.9*(K-1)+0.35*(P-1),-1.5,1.6);}
+    const n=+rest||6;return clamp(-1.05+0.3*(n-5),-1.5,2.25);
+  }
   if(dom==="mem"){
     if(rest[0]==="b"){const L=+rest.slice(1)||4;return clamp(-1.1+0.55*(L-3),-1.35,2.05);}
     const L=+rest||4;return clamp(-1.7+0.55*(L-3),-1.9,1.85);
@@ -1168,8 +1174,8 @@ function drawShape(g,type,s,fill,rot,stroke){
     p.setAttribute("d",shapePath(type,s*scale));
     p.setAttribute("fill","none");p.setAttribute("stroke",PAPER);
     p.setAttribute("stroke-width","3.1");p.setAttribute("stroke-linejoin","round");
-    if(stroke===1)p.setAttribute("stroke-dasharray","7 5");
-    else if(stroke===2)p.setAttribute("stroke-dasharray","2.5 4.5");
+    if(stroke===1)p.setAttribute("stroke-dasharray","8 6");
+    else if(stroke===2){p.setAttribute("stroke-dasharray","0.1 7.5");p.setAttribute("stroke-linecap","round");}
     grp.appendChild(p);
   };
   if(fill===1){
@@ -1201,7 +1207,8 @@ function cellGroup(cell,box=100){
   const cs=box/100;
   const inner=document.createElementNS(NS,"g");
   inner.setAttribute("transform",`translate(${box/2} ${box/2}) scale(${cs})`);
-  const n=cell.count||1, base=[19,27,36][cell.size], s=n===1?base:base*(n===4?0.52:0.6);
+  const SZB=cell.pos!==undefined?[16,23,30]:[19,27,36]; /* shrink when orbit mark present */
+  const n=cell.count||1, base=SZB[cell.size], s=n===1?base:base*(n===4?0.52:0.6);
   CPOS[n].forEach(([x,y])=>{
     const h=document.createElementNS(NS,"g");
     h.setAttribute("transform",`translate(${n===1?0:x} ${n===1?0:y})`);
@@ -1210,10 +1217,10 @@ function cellGroup(cell,box=100){
   });
   if(cell.pos!==undefined){
     const ang=cell.pos*Math.PI/4;
-    const sx=50+38*Math.sin(ang), sy=50-38*Math.cos(ang);
+    const sx=50+42*Math.sin(ang), sy=50-42*Math.cos(ang);
     const sat=document.createElementNS(NS,"circle");
     sat.setAttribute("cx",sx*cs); sat.setAttribute("cy",sy*cs);
-    sat.setAttribute("r",5.5*cs); sat.setAttribute("fill",PAPER);
+    sat.setAttribute("r",5*cs); sat.setAttribute("fill",PAPER);
     g.appendChild(sat);
   }
   if(cell.xor){
@@ -1285,6 +1292,87 @@ function analogySVG(item){
   put(item.C,0,box+gap);put(null,box+gap,box+gap,true);arrow(box+gap);
   return svg;
 }
+function foldGridSVG(holes,box){
+  box=box||100;
+  const svg=document.createElementNS(NS,"svg");
+  svg.setAttribute("viewBox","0 0 100 100");
+  svg.appendChild(frameRect(100,false));
+  for(let i=1;i<4;i++){
+    const v=document.createElementNS(NS,"line");
+    v.setAttribute("x1",10+i*20);v.setAttribute("y1",10);v.setAttribute("x2",10+i*20);v.setAttribute("y2",90);
+    v.setAttribute("stroke",LINE);v.setAttribute("stroke-width","1");svg.appendChild(v);
+    const h=document.createElementNS(NS,"line");
+    h.setAttribute("x1",10);h.setAttribute("y1",10+i*20);h.setAttribute("x2",90);h.setAttribute("y2",10+i*20);
+    h.setAttribute("stroke",LINE);h.setAttribute("stroke-width","1");svg.appendChild(h);
+  }
+  const o=document.createElementNS(NS,"rect");
+  o.setAttribute("x",10);o.setAttribute("y",10);o.setAttribute("width",80);o.setAttribute("height",80);
+  o.setAttribute("fill","none");o.setAttribute("stroke",PAPER);o.setAttribute("stroke-width","2");
+  svg.appendChild(o);
+  for(const [x,y] of holes){
+    const c=document.createElementNS(NS,"circle");
+    c.setAttribute("cx",20+x*20);c.setAttribute("cy",20+y*20);c.setAttribute("r",6);
+    c.setAttribute("fill",PAPER);svg.appendChild(c);
+  }
+  return svg;
+}
+function foldStimSVG(item){
+  const box=100,gap=16,n=item.folds.length+1,W=n*box+(n-1)*gap;
+  const svg=document.createElementNS(NS,"svg");
+  svg.setAttribute("viewBox",`0 0 ${W} ${box}`);
+  svg.setAttribute("width",Math.min(340,n*88));
+  const X=v=>10+v*20, Y=v=>10+v*20;
+  item.folds.forEach((fd,i)=>{
+    const g=document.createElementNS(NS,"g");
+    g.setAttribute("transform",`translate(${i*(box+gap)} 0)`);
+    g.appendChild(frameRect(box,false));
+    const r=document.createElementNS(NS,"rect");
+    r.setAttribute("x",X(fd.x0));r.setAttribute("y",Y(fd.y0));
+    r.setAttribute("width",(fd.x1-fd.x0)*20);r.setAttribute("height",(fd.y1-fd.y0)*20);
+    r.setAttribute("fill","rgba(234,229,217,.05)");r.setAttribute("stroke",PAPER);r.setAttribute("stroke-width","2");
+    g.appendChild(r);
+    const xm=(fd.x0+fd.x1)/2, ym=(fd.y0+fd.y1)/2;
+    const away=document.createElementNS(NS,"rect");
+    let ax,ay,aw,ah,cx1,cy1,cx2,cy2;
+    if(fd.f==="R"){ax=xm;ay=fd.y0;aw=fd.x1-xm;ah=fd.y1-fd.y0;cx1=X((xm+fd.x1)/2);cy1=Y(ym);cx2=X((fd.x0+xm)/2);cy2=cy1;}
+    else if(fd.f==="L"){ax=fd.x0;ay=fd.y0;aw=xm-fd.x0;ah=fd.y1-fd.y0;cx1=X((fd.x0+xm)/2);cy1=Y(ym);cx2=X((xm+fd.x1)/2);cy2=cy1;}
+    else if(fd.f==="D"){ax=fd.x0;ay=ym;aw=fd.x1-fd.x0;ah=fd.y1-ym;cx1=X(xm);cy1=Y((ym+fd.y1)/2);cx2=cx1;cy2=Y((fd.y0+ym)/2);}
+    else{ax=fd.x0;ay=fd.y0;aw=fd.x1-fd.x0;ah=ym-fd.y0;cx1=X(xm);cy1=Y((fd.y0+ym)/2);cx2=cx1;cy2=Y((ym+fd.y1)/2);}
+    away.setAttribute("x",X(ax));away.setAttribute("y",Y(ay));
+    away.setAttribute("width",aw*20);away.setAttribute("height",ah*20);
+    away.setAttribute("fill","none");away.setAttribute("stroke",BRASS);
+    away.setAttribute("stroke-width","1.8");away.setAttribute("stroke-dasharray","6 5");
+    g.appendChild(away);
+    const ar=document.createElementNS(NS,"path");
+    const mx=(cx1+cx2)/2+( fd.f==="R"||fd.f==="L" ? 0 : 14 ), my=(cy1+cy2)/2+( fd.f==="R"||fd.f==="L" ? -14 : 0 );
+    ar.setAttribute("d",`M ${cx1} ${cy1} Q ${mx} ${my} ${cx2} ${cy2}`);
+    ar.setAttribute("fill","none");ar.setAttribute("stroke",BRASS);ar.setAttribute("stroke-width","2");
+    g.appendChild(ar);
+    const tip=document.createElementNS(NS,"circle");
+    tip.setAttribute("cx",cx2);tip.setAttribute("cy",cy2);tip.setAttribute("r",3);tip.setAttribute("fill",BRASS);
+    g.appendChild(tip);
+    svg.appendChild(g);
+  });
+  const last=item.folds[item.folds.length-1];
+  let fx0=last.x0,fx1=last.x1,fy0=last.y0,fy1=last.y1;
+  if(last.f==="R")fx1=(last.x0+last.x1)/2; else if(last.f==="L")fx0=(last.x0+last.x1)/2;
+  else if(last.f==="D")fy1=(last.y0+last.y1)/2; else fy0=(last.y0+last.y1)/2;
+  const g2=document.createElementNS(NS,"g");
+  g2.setAttribute("transform",`translate(${item.folds.length*(box+gap)} 0)`);
+  g2.appendChild(frameRect(box,true));
+  const fr=document.createElementNS(NS,"rect");
+  fr.setAttribute("x",X(fx0));fr.setAttribute("y",Y(fy0));
+  fr.setAttribute("width",(fx1-fx0)*20);fr.setAttribute("height",(fy1-fy0)*20);
+  fr.setAttribute("fill","rgba(234,229,217,.07)");fr.setAttribute("stroke",PAPER);fr.setAttribute("stroke-width","2.2");
+  g2.appendChild(fr);
+  for(const [x,y] of item.punch){
+    const c=document.createElementNS(NS,"circle");
+    c.setAttribute("cx",X(x)+10);c.setAttribute("cy",Y(y)+10);c.setAttribute("r",6);
+    c.setAttribute("fill",BRASS);g2.appendChild(c);
+  }
+  svg.appendChild(g2);
+  return svg;
+}
 function optionCellSVG(cell){
   const svg=document.createElementNS(NS,"svg");
   svg.setAttribute("viewBox","0 0 100 100");
@@ -1315,6 +1403,16 @@ const ROTV=[0,45,90,135];
 const RW={constant:0.15,prog:0.55,dist3:0.85,arith:1.05,xor:1.2};
 
 function serCell(c){return[c.shape,c.size,c.fill,c.rot||0,c.count||1,(c.xor||[]).join(""),c.stroke||0,c.pos===undefined?"-":c.pos].join("|")}
+/* shapes whose four 45° rotations are ALL visually distinct */
+const ROT_SAFE=["tri","pent","hex","star"];
+function effRot(c){
+  if(c.fill===2) return c.rot||0;            /* half-fill makes rotation visible on any shape */
+  if(c.shape==="circ") return 0;             /* circle: rotation invisible */
+  if(c.shape==="sq"||c.shape==="dia"||c.shape==="cross") return (c.rot||0)%2; /* 90° symmetry */
+  return c.rot||0;
+}
+/* what the eye actually sees — used for all option dedup & answer checks */
+function visKey(c){return[c.shape,c.size,c.fill,effRot(c),c.count||1,(c.xor||[]).join(""),c.stroke||0,c.pos===undefined?"-":c.pos].join("|")}
 
 function planFor(targetB){
   let best=null;
@@ -1326,6 +1424,7 @@ function planFor(targetB){
     const need=hasXor?n-1:n;
     for(const a of attrs){
       if(used>=need) break;
+      if(a==="pos"&&hasXor) continue;
       let opts;
       if(a==="shape") opts=["constant","dist3"];
       else if(a==="fill") opts=["constant","dist3"];
@@ -1339,6 +1438,7 @@ function planFor(targetB){
     }
     if(hasXor) rules.push({type:"xor",attr:"xor"});
     if(!rules.length) continue;
+    if(rules.some(r=>r.attr==="count")&&rules.some(r=>["size","stroke","rot"].includes(r.attr))) continue; /* dwarf-cell zone: shrunken shapes blur texture, size and rotation cues */
     let b=-1.9+rules.reduce((s,r)=>s+RW[r.type],0)+0.32*(rules.length-1);
     if(rules.some(r=>r.type==="xor")&&rules.some(r=>r.type==="arith")) b+=0.15;
     b+= (RND()-0.5)*0.24;
@@ -1354,11 +1454,11 @@ function buildMatrix(targetB){
     const {rules,b}=planFor(targetB);
     const ruleOn=a=>rules.find(r=>r.attr===a);
     const rotRuled=!!ruleOn("rot"), strokeRuled=!!ruleOn("stroke"), posRuled=!!ruleOn("pos");
-    const shapePool=rotRuled?SHAPES.filter(s=>s!=="circ"):SHAPES;
+    const shapePool=rotRuled?ROT_SAFE:SHAPES;
     const fillPool=strokeRuled?[0,2,3]:[0,1,2,3];   /* texture invisible on solid fill */
     // fixed values for unruled attrs
     const fx={shape:pick(shapePool),size:ri(0,2),fill:pick(fillPool),rot:rotRuled?0:ri(0,3),count:1,stroke:0};
-    if(!ruleOn("count")) fx.count=1;
+    if(!ruleOn("count")) fx.count=1; else fx.size=ri(1,2);
     // per-rule row plans
     const rowVal={}; // attr -> [ [v0,v1,v2] x3rows ]
     for(const r of rules){
@@ -1376,7 +1476,7 @@ function buildMatrix(targetB){
       else if(r.type==="prog"){
         if(r.attr==="size"){const dir=pick([1,-1]);for(let i=0;i<3;i++)rows.push(dir===1?[0,1,2]:[2,1,0]);}
         else if(r.attr==="pos"){const st=pick([1,1,2,3]);for(let i=0;i<3;i++){const s0=ri(0,7);rows.push([s0,(s0+st)%8,(s0+2*st)%8]);}}
-        else if(r.attr==="rot"){const st=pick([1,1,2]);for(let i=0;i<3;i++){const s0=ri(0,3);rows.push([s0,(s0+st)%4,(s0+2*st)%4]);}}
+        else if(r.attr==="rot"){const st=pick([1,1,3]);for(let i=0;i<3;i++){const s0=ri(0,3);rows.push([s0,(s0+st)%4,(s0+2*st)%4]);}}
         else {const st=1;for(let i=0;i<3;i++){const s0=pick([1,1,2]);rows.push([s0,s0+st,s0+2*st].map(v=>clamp(v,1,4)));}}
       }
       else if(r.type==="dist3"){
@@ -1422,8 +1522,8 @@ function buildMatrix(targetB){
     }
     const ans=cells[2][2];
     // distractors
-    const keys=new Set([serCell(ans)]), opts=[ans];
-    const push=c=>{const k=serCell(c);if(!keys.has(k)){keys.add(k);opts.push(c);return true}return false};
+    const keys=new Set([visKey(ans)]), opts=[ans];
+    const push=c=>{const k=visKey(c);if(!keys.has(k)){keys.add(k);opts.push(c);return true}return false};
     const mut=(c,a)=>{const x={...c,xor:c.xor?c.xor.slice():undefined};
       if(a==="shape")x.shape=pick(shapePool.filter(s=>s!==c.shape));
       else if(a==="size")x.size=(c.size+pick([1,2]))%3;
@@ -1472,6 +1572,8 @@ function buildAnalogy(targetB){
     const types=shuffle(Object.keys(TW)).slice(0,k);
     const hasRot=types.includes("rot"), hasStroke=types.includes("stroke");
     const fillPool=hasStroke?[0,2,3]:[0,1,2,3];
+    const hasFillTf=types.includes("fill");
+    const fillBase=pick(hasStroke?[0,2,3]:[0,1,2,3]);
     const tf=types.map(t=>{
       if(t==="size")   return {t,d:pick([1,-1])};
       if(t==="rot")    return {t,d:ri(1,3)};
@@ -1480,8 +1582,8 @@ function buildAnalogy(targetB){
       return {t,d:ri(1,2)};
     });
     const mkBase=(avoidShape)=>{
-      const pool=(hasRot?SHAPES.filter(x=>x!=="circ"):SHAPES).filter(x=>x!==avoidShape);
-      const c={shape:pick(pool),size:1,fill:pick(fillPool),rot:ri(0,3),count:1,stroke:0};
+      const pool=(hasRot?ROT_SAFE:SHAPES).filter(x=>x!==avoidShape);
+      const c={shape:pick(pool),size:1,fill:hasFillTf?fillBase:pick(fillPool),rot:ri(0,3),count:1,stroke:0};
       for(const f of tf){
         if(f.t==="size") c.size=f.d===1?ri(0,1):ri(1,2);
         if(f.t==="count") c.count=f.d===2?ri(1,2):f.d===1?ri(1,3):ri(2,4);
@@ -1501,9 +1603,9 @@ function buildAnalogy(targetB){
     };
     const A=mkBase(), C=mkBase(A.shape);
     const B=apply(A), ans=apply(C);
-    if(serCell(A)===serCell(B)) continue;
-    const keys=new Set([serCell(ans)]), opts=[ans];
-    const push=c=>{const kk=serCell(c);if(!keys.has(kk)){keys.add(kk);opts.push(c);return true}return false};
+    if(visKey(A)===visKey(B)) continue;
+    const keys=new Set([visKey(ans)]), opts=[ans];
+    const push=c=>{const kk=visKey(c);if(!keys.has(kk)){keys.add(kk);opts.push(c);return true}return false};
     for(const f of tf){ /* miss exactly one transformation */
       const x={...C};
       for(const g of tf){ if(g===f) continue;
@@ -1517,7 +1619,7 @@ function buildAnalogy(targetB){
     }
     push({...B}); push({...C});
     let guard=0;
-    const mutp=["size","rot","fill","count"].concat(hasStroke?["stroke"]:[]);
+    const mutp=["size","fill","count"].concat(hasRot?["rot"]:[]).concat(hasStroke?["stroke"]:[]); /* never mutate an attribute irrelevant to the relation into a look-alike */
     while(opts.length<8&&guard<80){guard++;
       const x={...ans}, a=pick(mutp);
       if(a==="size")x.size=(x.size+pick([1,2]))%3;
@@ -1614,6 +1716,7 @@ function buildRotation(targetB){
   const opts=[{cells:correct,ok:true}];
   const keys=new Set([polyKey(correct)]);
   const m=mirP(base);
+  const tRots=new Set([0,1,2,3].map(r=>polyKey(rotP(base,r))));
   for(const r of shuffle([0,1,2,3])){
     const c=rotP(m,r);const k=polyKey(c);
     if(!keys.has(k)&&opts.length<4){keys.add(k);opts.push({cells:c,ok:false})}
@@ -1627,13 +1730,86 @@ function buildRotation(targetB){
     if(mod.some(c=>c[0]===x+dx&&c[1]===y+dy))continue;
     mod[idx]=[x+dx,y+dy];
     const c=rotP(normPoly(mod),ri(0,3));const k=polyKey(c);
-    if(!keys.has(k)){keys.add(k);opts.push({cells:c,ok:false})}
+    if(!keys.has(k)&&!tRots.has(k)){keys.add(k);opts.push({cells:c,ok:false})}
   }
   if(opts.length<5)return buildRotation(targetB);
   const order=shuffle([...Array(5).keys()]);
   const options=order.map(i=>opts[i]);
   return applyCalib({dom:"spa",target:base,options,correct:options.findIndex(o=>o.ok),sig:"spa_"+n,
           a:0.95+RND()*0.2,b:clamp(-1.05+0.3*(n-5)+(ang===2?-0.06:0.08)+(RND()-0.5)*0.24,-1.5,2.25),c:1/5});
+}
+
+function unfoldStep(hs,fold){
+  const out=[];
+  for(const [hx,hy] of hs){
+    out.push([hx,hy]);
+    if(fold.f==="R"||fold.f==="L") out.push([fold.x0+fold.x1-1-hx,hy]);
+    else out.push([hx,fold.y0+fold.y1-1-hy]);
+  }
+  return out;
+}
+const uniqHoles=hs=>[...new Map(hs.map(h=>[h.join(","),h])).values()];
+const holeKey=hs=>uniqHoles(hs).map(h=>h.join(",")).sort().join(";");
+function buildFold(targetB){
+  const combos=[[1,1,-1.35],[2,1,-0.45],[2,2,-0.10],[3,1,0.45]]; /* f32 is degenerate: 16/16 holes */
+  let best=combos[0];
+  for(const c of combos) if(Math.abs(c[2]-targetB)<Math.abs(best[2]-targetB)) best=c;
+  const K=best[0],P=best[1];
+  for(let att=0;att<40;att++){
+    let x0=0,x1=4,y0=0,y1=4; const folds=[];
+    for(let i=0;i<K;i++){
+      const av=[];
+      if(x1-x0>=2) av.push("R","L");
+      if(y1-y0>=2) av.push("U","D");
+      const f=pick(av); folds.push({f,x0,x1,y0,y1});
+      if(f==="R") x1=(x0+x1)/2; else if(f==="L") x0=(x0+x1)/2;
+      else if(f==="D") y1=(y0+y1)/2; else y0=(y0+y1)/2;
+    }
+    const cells=[];
+    for(let x=x0;x<x1;x++) for(let y=y0;y<y1;y++) cells.push([x,y]);
+    const punch=shuffle(cells).slice(0,P);
+    if(punch.length<P) continue;
+    let holes=punch.map(h=>h.slice());
+    for(let i=folds.length-1;i>=0;i--) holes=unfoldStep(holes,folds[i]);
+    if(new Set(holes.map(h=>h.join(","))).size!==P*Math.pow(2,K)) continue;
+    const opts=[{holes}], keys=new Set([holeKey(holes)]);
+    const push=hs=>{hs=uniqHoles(hs);const k=holeKey(hs);
+      if(hs.length&&!keys.has(k)){keys.add(k);opts.push({holes:hs});return true}return false};
+    { /* forgot the outermost unfold */
+      let hs=punch.map(h=>h.slice());
+      for(let i=folds.length-1;i>=1;i--) hs=unfoldStep(hs,folds[i]);
+      push(hs);
+    }
+    { /* reflected across the wrong axis */
+      const f0=folds[0], alt={...f0,f:(f0.f==="R"||f0.f==="L")?"U":"R"};
+      let hs=punch.map(h=>h.slice());
+      for(let i=folds.length-1;i>=1;i--) hs=unfoldStep(hs,folds[i]);
+      hs=unfoldStep(hs,alt).filter(([x,y])=>x>=0&&x<4&&y>=0&&y<4);
+      push(hs);
+    }
+    push(holes.map(([x,y])=>[3-x,y]));
+    push(holes.map(([x,y])=>[x,3-y]));
+    for(const [dx,dy] of shuffle([[1,0],[-1,0],[0,1],[0,-1]])){
+      const hs=holes.map(([x,y])=>[x+dx,y+dy]);
+      if(hs.every(([x,y])=>x>=0&&x<4&&y>=0&&y<4)){push(hs);break;}
+    }
+    let g=0;
+    while(opts.length<6&&g<60){g++;
+      const hs=holes.map(h=>h.slice()), i=ri(0,hs.length-1);
+      const [dx,dy]=pick([[1,0],[-1,0],[0,1],[0,-1]]);
+      const nx=hs[i][0]+dx, ny=hs[i][1]+dy;
+      if(nx<0||nx>3||ny<0||ny>3) continue;
+      if(hs.some(h=>h[0]===nx&&h[1]===ny)) continue;
+      hs[i]=[nx,ny]; push(hs);
+    }
+    if(opts.length<6) continue;
+    const order=shuffle([...Array(6).keys()]);
+    return applyCalib({dom:"spa",qk:"fold",folds,punch,
+      options:order.map(i=>opts[i]),correct:order.indexOf(0),
+      sig:"spa_f"+K+P,a:1.0+RND()*0.2,
+      b:clamp(best[2]+(RND()-0.5)*0.22,-1.5,1.1),c:1/6});
+  }
+  return buildRotation(targetB);
 }
 
 function buildMem(targetB,rev){
@@ -1687,6 +1863,8 @@ function buildPool(){
    .forEach(b=>pool.push(buildAnalogy(b)));
   [-1.05,-0.75,-0.45,-0.15,0.15,0.5,0.9,1.3]
    .forEach(b=>pool.push(buildMem(b,true)));
+  [-1.3,-1.05,-0.85,-0.65,-0.45,-0.25,-0.05,0.15,0.3,0.45]
+   .forEach(b=>pool.push(buildFold(b)));
   pool.forEach((it,i)=>it.id=i);
   return pool;
 }
@@ -1759,6 +1937,7 @@ function renderStim(item){
   const box=$("#stim"); box.innerHTML="";
   if(item.dom==="mem"){ renderMemStim(item); return; }
   if(item.qk==="ana"){ box.appendChild(analogySVG(item)); return; }
+  if(item.qk==="fold"){ box.appendChild(foldStimSVG(item)); return; }
   if(item.dom==="pat") box.appendChild(matrixSVG(item));
   else if(item.dom==="num"){
     const d=document.createElement("div"); d.className="series-stim";
@@ -1787,7 +1966,8 @@ function renderOptions(item){
   item.options.forEach((opt,i)=>{
     const b=document.createElement("button"); b.className="opt"; b.type="button";
     const k=document.createElement("span"); k.className="k"; k.textContent=String(i+1); b.appendChild(k);
-    if(item.dom==="pat") b.appendChild(optionCellSVG(opt));
+    if(item.qk==="fold") b.appendChild(foldGridSVG(opt.holes));
+    else if(item.dom==="pat") b.appendChild(optionCellSVG(opt));
     else if(item.dom==="num"){const s=document.createElement("span");s.className="txt";s.textContent=opt;b.appendChild(s)}
     else b.appendChild(polyominoSVG(opt.cells));
     b.addEventListener("click",()=>onSelect(i,b));

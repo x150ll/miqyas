@@ -619,6 +619,7 @@ footer .ruler{margin-bottom:30px}
       <span class="rchip" id="chip-prec">—</span>
     </div>
     <div class="classif" id="res-class">—</div>
+    <div class="dnote" id="res-bound" style="margin-top:10px;text-align:center;max-width:520px" hidden></div>
     <div class="flagline" id="res-flag" hidden>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
       <span id="res-flag-txt"></span>
@@ -777,6 +778,8 @@ ar:{
   copied:"نُسخت النتيجة",
   points:"نقاط", few:"بيانات غير كافية",
   cls_130:"متفوق جدًا", cls_120:"متفوق", cls_110:"فوق المتوسط", cls_90:"ضمن المتوسط", cls_80:"دون المتوسط قليلًا", cls_0:"أقل من المتوسط",
+  res_bound_low:"قراءة عند الحد الأدنى لمدى الاختبار — ما دون هذا المستوى لا يميّزه أي اختبار قصير، والقدرة الفعلية قد تكون أدنى من الرقم المعروض.",
+  res_bound_high:"قراءة عند الحد الأعلى لمدى الاختبار — ما فوق هذا المستوى لا يميّزه أي اختبار قصير، والقدرة الفعلية قد تتجاوز الرقم المعروض.",
   m_eyebrow:"للفضوليين", m_title:"كيف نقيس بدقة؟",
   m1_h:"أسئلة من مدرسة عريقة",
   m1_p:"أسئلة الأنماط هنا تنتمي لعائلة «المصفوفات المتدرجة» — أشهر وأصدق تقليد عالمي لقياس الاستدلال الخام منذ ثمانين عامًا، لأنه لا يعتمد على لغة ولا معرفة مسبقة. كل سؤال يُبنى بقواعد رياضية معروفٌ أثرها على الصعوبة.",
@@ -856,6 +859,8 @@ en:{
   copied:"Result copied",
   points:"pts", few:"Not enough data",
   cls_130:"Very superior", cls_120:"Superior", cls_110:"Above average", cls_90:"Average", cls_80:"Slightly below average", cls_0:"Below average",
+  res_bound_low:"Reading at the lower bound of this test's range — no short test can distinguish below this level; true ability may be lower than shown.",
+  res_bound_high:"Reading at the upper bound of this test's range — no short test can distinguish above this level; true ability may exceed what is shown.",
   m_eyebrow:"For the curious", m_title:"How we measure precisely",
   m1_h:"Questions from a storied tradition",
   m1_p:"The pattern questions belong to the \u201Cprogressive matrices\u201D family — the world's most trusted tradition for measuring raw reasoning for eighty years, precisely because it needs no language and no prior knowledge. Every question is built from mathematical rules whose effect on difficulty is known.",
@@ -2254,6 +2259,10 @@ function renderResults(f,relang){
   $("#chip-pct").innerHTML=`${T("res_pct")} <b>${f.pct.toFixed(1)}%</b> ${T("res_pct2")}`;
   $("#chip-prec").textContent=`${T("res_prec")} ±${f.margin} ${T("points")}`;
   $("#res-class").textContent=classify(f.iq);
+  const rb=$("#res-bound");
+  if(f.iq<=62){rb.hidden=false;rb.textContent=T("res_bound_low");}
+  else if(f.iq>=142){rb.hidden=false;rb.textContent=T("res_bound_high");}
+  else rb.hidden=true;
   $("#res-flag").hidden=!f.flag;
   if(f.flag) $("#res-flag-txt").textContent=T("res_flag");
   buildGauge(f); buildCurve(f);

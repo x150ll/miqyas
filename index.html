@@ -1140,10 +1140,15 @@ function shouldLogCalib(item,u,rt,timeout){
   if(rt<floor) return false;                                 /* physically-implausible answers */
   return true;
 }
-function logAgg(sig,u,th){
+function logAgg(sig,u,th,rt){
   const b=aggBin(th), body={};
   body["n"+b]={".sv":{"increment":1}};
-  if(u) body["c"+b]={".sv":{"increment":1}};
+  if(u){
+    body["c"+b]={".sv":{"increment":1}};
+    /* correct-response time: the scientific basis for future limit tuning */
+    body["rts"]={".sv":{"increment":Math.round(clamp(rt,1200,240000))}};
+    body["rtn"]={".sv":{"increment":1}};
+  }
   ST.logCount=(ST.logCount||0)+1;
   try{
     fetch(CALIB.url+"/agg/"+sig+".json",{
@@ -2163,7 +2168,7 @@ function recordAnswer(fromLock,timeout){
   ST.used.add(item.id);
   const e=eap(ST.resps); ST.th=e.th; ST.se=e.se;
   setPrecision(ST.se);
-  if(shouldLogCalib(item,u,rt,timeout)) logAgg(item.sig,u,thPrev);
+  if(shouldLogCalib(item,u,rt,timeout)) logAgg(item.sig,u,thPrev,rt);
   if(shouldStop()){setTimeout(finish,650);return}
   AU.next();
   setTimeout(()=>serveItem(nextItem()),480);

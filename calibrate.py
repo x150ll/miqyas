@@ -147,7 +147,9 @@ def main():
             print(f"{sig.ljust(w)}  {sum(N):>6}  {pred_b(sig):>+7.2f}  {'—':>7}  {'—':>6}  {'—':>5}  collecting…")
             continue
         note = "LOW DISCRIMINATION — consider retiring" if eff["raw_a"] < 0.55 else ""
-        print(f"{sig.ljust(w)}  {eff['n']:>6}  {eff['pred']:>+7.2f}  {eff['b']:>+7.2f}  {eff['b']-eff['pred']:>+6.2f}  {eff['a']:>5.2f}  {note}")
+        rts, rtn = int(rec.get("rts", 0) or 0), int(rec.get("rtn", 0) or 0)
+        mrt = f"{rts/rtn/1000:4.1f}s" if rtn >= 20 else "  — "
+        print(f"{sig.ljust(w)}  {eff['n']:>6}  {eff['pred']:>+7.2f}  {eff['b']:>+7.2f}  {eff['b']-eff['pred']:>+6.2f}  {eff['a']:>5.2f}  rt̄={mrt}  {note}")
         out[sig] = {"a": eff["a"], "b": eff["b"], "n": eff["n"]}
     tot = sum(popN)
     if tot >= 300:
